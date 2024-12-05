@@ -1,0 +1,61 @@
+import streamlit as st
+import pandas as pd
+from collections import defaultdict
+
+def procesar_acta(texto):
+    # Ejemplo de procesamiento: extraer asistentes, temas, y acciones
+    asistentes = defaultdict(set)
+    acciones = []
+    temas = []
+    
+    for linea in texto.split('\n'):
+        if "Juan Pérez" in linea:
+            asistentes["Organización Interna"].add("Juan Pérez")
+        if "Carlos Ruiz" in linea:
+            asistentes["Organización Interna"].add("Carlos Ruiz")
+        if "Lucía Fernández" in linea:
+            asistentes["Organización Interna"].add("Lucía Fernández")
+        if "Ana García" in linea:
+            asistentes["Organización Interna"].add("Ana García")
+        if "David Martínez" in linea:
+            asistentes["Organización Interna"].add("David Martínez")
+        if "auditor" in linea.lower():
+            asistentes["Auditor Externo"].add("Auditor de Seguridad")
+        
+        if "futuro" in linea or "se debe" in linea or "propondrá" in linea:
+            acciones.append(linea.strip())
+        else:
+            temas.append(linea.strip())
+    
+    return asistentes, temas, acciones
+
+st.title("Asistente para Resúmenes de Actas")
+
+uploaded_file = st.file_uploader("Sube el archivo del acta en formato .txt", type="txt")
+
+if uploaded_file:
+    contenido = uploaded_file.read().decode("utf-8")
+    asistentes, temas, acciones = procesar_acta(contenido)
+    
+    st.subheader("Resumen Estructurado del Acta")
+    
+    st.markdown("### 1. Asistentes de la Reunión")
+    for grupo, nombres in asistentes.items():
+        st.write(f"**{grupo}:** {', '.join(nombres)}")
+    
+    st.markdown("### 2. Resumen de Temas Tratados")
+    for tema in temas:
+        st.write(f"- {tema}")
+    
+    st.markdown("### 3. Acciones Pendientes")
+    for accion in acciones:
+        st.write(f"- {accion}")
+    
+    # Crear tabla de estadísticas
+    st.markdown("### 4. Estadísticas de Tareas Asignadas")
+    estadisticas = {
+        "Participante": list(asistentes["Organización Interna"]),
+        "Tareas Asignadas": [acciones.count(nombre) for nombre in asistentes["Organización Interna"]],
+    }
+    df_estadisticas = pd.DataFrame(estadisticas)
+    st.dataframe(df_estadisticas)
